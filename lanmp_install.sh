@@ -1,4 +1,6 @@
 #install lanmp environment;
+#Write by @SamjoeYang
+
 
 function init()
 {
