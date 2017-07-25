@@ -30,7 +30,7 @@ function install_nginx()
 function install_php()
 {
 	#install support libs
-	yum -y install libxml2 libxml2-devel curl curl-devel libjpeg libjpeg-devel libpng libpng-devel libmcrypt libmcrypt-devel mhash mcrypt  libtool-ltdl libtool-ltdl-devel bzip2 bzip2-devel freetype freetype-devel openldap openldap-devel openssl openssl-devel re2c
+	yum -y install libxml2 libxml2-devel curl curl-devel libjpeg libjpeg-devel libpng libpng-devel libmcrypt libmcrypt-devel mhash mcrypt  libtool-ltdl libtool-ltdl-devel bzip2 bzip2-devel freetype freetype-devel openldap openldap-devel openssl openssl-devel re2c gmp gmp-devel libmcrypt libmcrypt-devel readline readline-devel libxslt libxslt-devel
 
 	cp -frp /usr/lib64/libldap* /usr/lib/
 
