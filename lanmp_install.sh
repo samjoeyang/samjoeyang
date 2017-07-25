@@ -34,40 +34,37 @@ function install_php()
 
 	cp -frp /usr/lib64/libldap* /usr/lib/
 
-#	php_version="5.6.31"
-	php_version="7.1.17"
+	php_version="5.6.31"
+#	php_version="7.1.7"
 
 	#download php
 	if [ ! -f "php-$php_version.tar.bz2" ]; then
 		wget -c http://cn2.php.net/distributions/php-$php_version.tar.bz2
 	fi
-	if [ $php_version == "7.1.17" ]; then
+	if [ $php_version == "7.1.7" ]; then
 		with_mysql="--enable-mysqlnd --with-mysqli=mysqlnd --with-mysql-sock=/tmp/mysql.sock --with-pdo-mysql=mysqlnd"
-		with_gd="--with-gd --with-webp-dir --with-jpeg-dir=/usr/local/lib --with-png-dir --with-xpm-dir --with-freetype-dir"
+		with_gd="--with-gd --with-jpeg-dir=/usr/local/lib --with-png-dir --with-freetype-dir" #--with-webp-dir --with-xpm-dir 
 	elif [ $php_version == "5.6.31" ]; then
 		with_mysql="--enable-mysqlnd --with-mysql=mysqlnd --with-mysqli=mysqlnd --with-mysql-sock=/tmp/mysql.sock --with-pdo-mysql=mysqlnd"
-		with_gd="--with-gd --with-vpx-dir --with-jpeg-dir=/usr/local/lib --with-png-dir --with-xpm-dir --with-freetype-dir"
+		with_gd="--with-gd --with-jpeg-dir=/usr/local/lib --with-png-dir --with-freetype-dir" #--with-vpx-dir --with-xpm-dir 
 	else
 		with_mysql="--enable-mysqlnd --with-mysql=mysqlnd --with-mysqli=mysqlnd --with-mysql-sock=/tmp/mysql.sock --with-pdo-mysql=mysqlnd"
-		with_gd="--with-gd --with-jpeg-dir=/usr/local/lib --with-png-dir --with-xpm-dir --with-freetype-dir"
+		with_gd="--with-gd --with-jpeg-dir=/usr/local/lib --with-png-dir --with-freetype-dir" #--with-xpm-dir 
 	fi
 
 	#install php
 	php_path=`pwd`/php
 	tar -jxvf php-$php_version.tar.bz2 && mv php-$php_version $php_path/ && cd $php_path
+	#--with-apxs2=/usr/sbin/apxs --with-config-file-path=/etc --with-fpm-user=nginx --with-fpm-group=nginx--with-gmp \
 	./configure --prefix=`pwd` \
-#	--with-apxs2=/usr/sbin/apxs \
-#	--with-config-file-path=/etc \
 	--enable-fpm \
-#	--with-fpm-user=nginx  \
-#	--with-fpm-group=nginx \
 	--enable-inline-optimization \
 	--enable-debug \
-  	--disable-rpath \
+  --disable-rpath \
  	--enable-shared  \
-  	--enable-soap \
+  --enable-soap \
 	${with_mysql} \
-        ${with_gd} \
+  ${with_gd} \
 	--with-openssl  \
 	--with-openssl-dir \
 	--with-iconv \
@@ -117,7 +114,6 @@ function install_php()
 	--enable-gd-native-ttf \
 	--enable-gd-jis-conv \
 	--with-gettext \
-	--with-gmp \
 	--enable-json \
 	--enable-mbstring \
 	--enable-mbregex \
@@ -168,7 +164,7 @@ function install_php()
 	sed -i "s/memory_limit = 128M/memory_limit = 1024M/g" $(php-config --prefix)/lib/php.ini
 	
 	#config php-fpm.  use -t test fpm's configs
-        cp $php_path/sapi/fpm/init.d.php-fpm /etc/init.d/php-fpm && \
+  cp $php_path/sapi/fpm/init.d.php-fpm /etc/init.d/php-fpm && \
 	chmod a+x /etc/init.d/php-fpm && \
 	chkconfig --add php-fpm && \
 	chkconfig php-fpm on && \
@@ -195,8 +191,8 @@ function install_php()
 
 	#config nginx
 	if [ -f "/etc/nginx/conf.d/default.conf" ]; then
-        	mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.bak
-        	echo -e "server\n{\n listen 80;\n server_name localhost;\n root /var/www/html;\n access_log /var/log/nginx/access_com.log;\n error_log /var/log/nginx/error_com.log;\n index index.html index.php;\n location ~ \.php$ {\n  fastcgi_pass 127.0.0.1:9000;\n  fastcgi_index index.php;\n  fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;\n  include fastcgi_params; \n  }\n}" >> /etc/nginx/conf.d/vhost.conf
+    mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.bak
+    echo -e "server\n{\n listen 80;\n server_name localhost;\n root /var/www/html;\n access_log /var/log/nginx/access_com.log;\n error_log /var/log/nginx/error_com.log;\n index index.html index.php;\n location ~ \.php$ {\n  fastcgi_pass 127.0.0.1:9000;\n  fastcgi_index index.php;\n  fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;\n  include fastcgi_params; \n  }\n}" >> /etc/nginx/conf.d/vhost.conf
 		service nginx stop
 #		service nginx restart
 	fi
@@ -362,37 +358,37 @@ function update_openssh()
 	if [ $if_zlib == "y" ]; then
 		zlib_path="/usr/local/zlib"
 		echo "update zlib..."
-	if [ ! -f "zlib-1.2.11.tar.gz" ]; then
-		wget -c http://www.zlib.net/zlib-1.2.11.tar.gz
-	fi
-	tar xzvf zlib-1.2.11.tar.gz
-	cd zlib-1.2.11
-	./configure --prefix=$zlib_path
-	make
-	make install
+	  if [ ! -f "zlib-1.2.11.tar.gz" ]; then
+	  	wget -c http://www.zlib.net/zlib-1.2.11.tar.gz
+	  fi
+	  tar xzvf zlib-1.2.11.tar.gz
+	  cd zlib-1.2.11
+	  ./configure --prefix=$zlib_path
+	  make
+	  make install
 	else
 		zlib_path="/usr/include"
 	fi
 
 	#step2:update openssl
 	read -p "If update openssl? Y or N : " if_ssl
-        if [ $if_ssl == "y" ]; then
-                echo "update ssl..."
-		openssl_path="/usr/local/openssl"
+    if [ $if_ssl == "y" ]; then
+      echo "update ssl..."
+		  openssl_path="/usr/local/openssl"
 
-	if [ ! -f "openssl-1.0.2l.tar.gz" ]; then
-		wget -c https://www.openssl.org/source/openssl-1.0.2l.tar.gz
-	fi
-	tar xzvf openssl-1.0.2l.tar.gz
-	cd openssl-1.0.2l
-	./Configure --prefix=$openssl_path
-	make
-	make test	#must to run this
-	make install
+	    if [ ! -f "openssl-1.0.2l.tar.gz" ]; then
+		    wget -c https://www.openssl.org/source/openssl-1.0.2l.tar.gz
+	    fi
+	    tar xzvf openssl-1.0.2l.tar.gz
+	    cd openssl-1.0.2l
+	    ./Configure --prefix=$openssl_path
+	    make
+	    make test	#must to run this
+	    make install
 
-	else
-		openssl_path="/usr/include"
-	fi
+	  else
+	  	openssl_path="/usr/include"
+	  fi
 
 	#step3:update ssh
 	#backup old-version ssh's files
@@ -503,13 +499,13 @@ if [ ${#chk_env} -gt 0 ]; then
 else
 	while true; do
 	read -p "Do you wish initialization environment? Please Enter Y/N: " yn
-	    case $yn in
-	        [Yy]* ) init; break;;
-	        [Nn]* ) echo "";break;;
-	        [Ee]* ) exit;;
-	        * ) echo "Please answer Y or N.";;
-	    esac
-	done
+    case $yn in
+      [Yy]* ) init; break;;
+      [Nn]* ) echo "";break;;
+      [Ee]* ) exit;;
+      * ) echo "Please answer Y or N.";;
+    esac
+  done
 fi
 
 while true; do
