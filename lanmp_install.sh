@@ -29,80 +29,80 @@ function install_nginx()
 
 function install_php()
 {
-	#install support libs
-	yum -y install libxml2 libxml2-devel curl curl-devel libjpeg libjpeg-devel libpng libpng-devel libmcrypt libmcrypt-devel mhash mcrypt  libtool-ltdl libtool-ltdl-devel bzip2 bzip2-devel freetype freetype-devel openldap openldap-devel openssl openssl-devel re2c gmp gmp-devel libmcrypt libmcrypt-devel readline readline-devel libxslt libxslt-devel
+  #install support libs
+  yum -y install libxml2 libxml2-devel curl curl-devel libjpeg libjpeg-devel libpng libpng-devel libmcrypt libmcrypt-devel mhash mcrypt  libtool-ltdl libtool-ltdl-devel bzip2 bzip2-devel freetype freetype-devel openldap openldap-devel openssl openssl-devel re2c gmp gmp-devel libmcrypt libmcrypt-devel readline readline-devel libxslt libxslt-devel
+  
+  cp -frp /usr/lib64/libldap* /usr/lib/
 
-	cp -frp /usr/lib64/libldap* /usr/lib/
+#  php_version="5.6.31"
+  php_version="7.1.7"
 
-	php_version="5.6.31"
-#	php_version="7.1.7"
+  #download php
+  if [ ! -f "php-$php_version.tar.bz2" ]; then
+    wget -c http://cn2.php.net/distributions/php-$php_version.tar.bz2
+  fi
+  if [ $php_version == "7.1.7" ]; then
+    with_mysql="--enable-mysqlnd --with-mysqli=mysqlnd --with-mysql-sock=/tmp/mysql.sock --with-pdo-mysql=mysqlnd"
+    with_gd="--with-gd --with-jpeg-dir=/usr/local/lib --with-png-dir --with-freetype-dir" #--with-webp-dir --with-xpm-dir 
+  elif [ $php_version == "5.6.31" ]; then
+    with_mysql="--enable-mysqlnd --with-mysql=mysqlnd --with-mysqli=mysqlnd --with-mysql-sock=/tmp/mysql.sock --with-pdo-mysql=mysqlnd"
+    with_gd="--with-gd --with-jpeg-dir=/usr/local/lib --with-png-dir --with-freetype-dir" #--with-vpx-dir --with-xpm-dir 
+  else
+    with_mysql="--enable-mysqlnd --with-mysql=mysqlnd --with-mysqli=mysqlnd --with-mysql-sock=/tmp/mysql.sock --with-pdo-mysql=mysqlnd"
+    with_gd="--with-gd --with-jpeg-dir=/usr/local/lib --with-png-dir --with-freetype-dir" #--with-xpm-dir 
+  fi
 
-	#download php
-	if [ ! -f "php-$php_version.tar.bz2" ]; then
-		wget -c http://cn2.php.net/distributions/php-$php_version.tar.bz2
-	fi
-	if [ $php_version == "7.1.7" ]; then
-		with_mysql="--enable-mysqlnd --with-mysqli=mysqlnd --with-mysql-sock=/tmp/mysql.sock --with-pdo-mysql=mysqlnd"
-		with_gd="--with-gd --with-jpeg-dir=/usr/local/lib --with-png-dir --with-freetype-dir" #--with-webp-dir --with-xpm-dir 
-	elif [ $php_version == "5.6.31" ]; then
-		with_mysql="--enable-mysqlnd --with-mysql=mysqlnd --with-mysqli=mysqlnd --with-mysql-sock=/tmp/mysql.sock --with-pdo-mysql=mysqlnd"
-		with_gd="--with-gd --with-jpeg-dir=/usr/local/lib --with-png-dir --with-freetype-dir" #--with-vpx-dir --with-xpm-dir 
-	else
-		with_mysql="--enable-mysqlnd --with-mysql=mysqlnd --with-mysqli=mysqlnd --with-mysql-sock=/tmp/mysql.sock --with-pdo-mysql=mysqlnd"
-		with_gd="--with-gd --with-jpeg-dir=/usr/local/lib --with-png-dir --with-freetype-dir" #--with-xpm-dir 
-	fi
-
-	#install php
-	php_path=`pwd`/php
-	tar -jxvf php-$php_version.tar.bz2 && mv php-$php_version $php_path/ && cd $php_path
-	#--with-apxs2=/usr/sbin/apxs --with-config-file-path=/etc --with-fpm-user=nginx --with-fpm-group=nginx--with-gmp \
-	./configure --prefix=`pwd` \
-	--enable-fpm \
-	--enable-inline-optimization \
-	--enable-debug \
+  #install php
+  php_path=`pwd`/php
+  tar -jxvf php-$php_version.tar.bz2 && mv php-$php_version $php_path/ && cd $php_path
+  #--with-apxs2=/usr/sbin/apxs --with-config-file-path=/etc --with-fpm-user=nginx --with-fpm-group=nginx--with-gmp \
+  ./configure --prefix=`pwd` \
+  --enable-fpm \
+  --enable-inline-optimization \
+  --enable-debug \
   --disable-rpath \
- 	--enable-shared  \
+  --enable-shared  \
   --enable-soap \
-	${with_mysql} \
+  ${with_mysql} \
   ${with_gd} \
-	--with-openssl  \
-	--with-openssl-dir \
-	--with-iconv \
-	--with-zlib \
-	--with-bz2 \
-	--with-libxml-dir  \
-	--with-gettext \
-	--with-curl \
-	--with-mhash \
-	--with-mcrypt \
-	--enable-mbstring \
-	--enable-mbregex \
-	--with-ldap \
-	--with-ldap-sasl \
-	--with-xmlrpc  \
-	--enable-gd-native-ttf  \
-	--enable-pdo  \
-	--enable-pcntl \
-	--enable-sockets \
-	--enable-bcmath \
-	--enable-xml \
-	--enable-zip \
-	--enable-soap \
-	--enable-bcmath \
-	--enable-shmop \
-	--enable-sysvsem \
-	--enable-inline-optimization \
-	--enable-maintainer-zts \
-	--enable-opcache \
-	--enable-cgi \
-	--without-pear \
-	--disable-phar \
-	--with-xmlrpc \
-	--with-pcre-regex \
-	--with-sqlite3 \
-	--enable-bcmath \
-	--with-iconv \
-	--enable-calendar \
+  --with-openssl  \
+  --with-openssl-dir \
+  --with-iconv \
+  --with-zlib \
+  --with-bz2 \
+  --with-libxml-dir  \
+  --with-gettext \
+  --with-curl \
+  --with-mhash \
+  --with-mcrypt \
+  --enable-mbstring \
+  --enable-mbregex \
+  --with-ldap \
+  --with-ldap-sasl \
+  --with-xmlrpc  \
+  --enable-gd-native-ttf  \
+  --enable-pdo  \
+  --enable-pcntl \
+  --enable-sockets \
+  --enable-bcmath \
+  --enable-xml \
+  --enable-zip \
+  --enable-soap \
+  --enable-bcmath \
+  --enable-shmop \
+  --enable-sysvsem \
+  --enable-inline-optimization \
+  --enable-maintainer-zts \
+  --enable-opcache \
+  --enable-cgi \
+  --without-pear \
+  --disable-phar \
+  --with-xmlrpc \
+  --with-pcre-regex \
+  --with-sqlite3 \
+  --enable-bcmath \
+  --with-iconv \
+  --enable-calendar \
 	--with-cdb \
 	--enable-dom \
 	--enable-exif \
@@ -137,65 +137,76 @@ function install_php()
 	--enable-mysqlnd-compression-support \
 	--with-pear \
 	--enable-opcache >> ../install_php_log 
-	make >> ../install_php_log 
-	make install >> ../install_php_log 
-	cd ../
-
-	if [ ! -f "/usr/local/bin/php-config" ]; then
-        ln -s $php_path/bin/php-config  /usr/local/bin/php-config
-        fi
-        if [ ! -f "/usr/local/bin/phpize" ]; then
-        ln -s $php_path/bin/phpize  /usr/local/bin/phpize
-        fi
-	if [ ! -f "/usr/local/bin/php" ]; then
-	ln -s $php_path/bin/php /usr/local/bin/php
-	fi
-	if [ ! -f "/usr/local/bin/php-cgi" ]; then
-	ln -s $php_path/bin/php-cgi /usr/local/bin/php-cgi
-	fi
-	echo "PATH=\$PATH:/usr/sbin:/usr/bin:/usr/local/bin" >> /etc/profile && source /etc/profile
+  make >> ../install_php_log 
+  make install >> ../install_php_log 
+  cd ../
+  
+  if [ ! -f "/usr/local/bin/php-config" ]; then
+    ln -s $php_path/bin/php-config  /usr/local/bin/php-config
+  fi
+  if [ ! -f "/usr/local/bin/phpize" ]; then
+    ln -s $php_path/bin/phpize  /usr/local/bin/phpize
+  fi
+  if [ ! -f "/usr/local/bin/php" ]; then
+    ln -s $php_path/bin/php /usr/local/bin/php
+  fi
+  if [ ! -f "/usr/local/bin/php-cgi" ]; then
+    ln -s $php_path/bin/php-cgi /usr/local/bin/php-cgi
+  fi
+  echo "PATH=\$PATH:/usr/sbin:/usr/bin:/usr/local/bin" >> /etc/profile && source /etc/profile
 	
-	#config PHP
-	cp $php_path/php.ini-development  $(php-config --prefix)/lib/php.ini && sed -i 's/\;date\.timezone \=/date\.timezone \=PRC/g' $(php-config --prefix)/lib/php.ini && sed -i "s/\;include_path \= \"\.\:\/php\/includes\"/include_path \= \"\$\(php-config --prefix\)\/lib\/php\"/g" $(php-config --prefix)/lib/php.ini && ln -s $(php-config --prefix)/bin/php /usr/bin/php
-	sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 300M/g" $(php-config --prefix)/lib/php.ini
-	sed -i "s/post_max_size = 8M/post_max_size = 300M/g" $(php-config --prefix)/lib/php.ini
-	sed -i "s/max_execution_time = 30/max_execution_time = 600/g" $(php-config --prefix)/lib/php.ini
-	sed -i "s/max_input_time = 60/max_input_time = 600/g" $(php-config --prefix)/lib/php.ini
-	sed -i "s/memory_limit = 128M/memory_limit = 1024M/g" $(php-config --prefix)/lib/php.ini
+  #config PHP
+  cp $php_path/php.ini-development  $(php-config --prefix)/lib/php.ini && sed -i 's/\;date\.timezone \=/date\.timezone \=PRC/g' $(php-config --prefix)/lib/php.ini && sed -i "s/\;include_path \= \"\.\:\/php\/includes\"/include_path \= \"\$\(php-config --prefix\)\/lib\/php\"/g" $(php-config --prefix)/lib/php.ini && ln -s $(php-config --prefix)/bin/php /usr/bin/php
+  sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 300M/g" $(php-config --prefix)/lib/php.ini
+  sed -i "s/post_max_size = 8M/post_max_size = 300M/g" $(php-config --prefix)/lib/php.ini
+  sed -i "s/max_execution_time = 30/max_execution_time = 600/g" $(php-config --prefix)/lib/php.ini
+  sed -i "s/max_input_time = 60/max_input_time = 600/g" $(php-config --prefix)/lib/php.ini
+  sed -i "s/memory_limit = 128M/memory_limit = 1024M/g" $(php-config --prefix)/lib/php.ini
 	
-	#config php-fpm.  use -t test fpm's configs
+  #config php-fpm.  use -t test fpm's configs
+  kill `ps aux |grep php-fpm|cut -b 10-14`
   cp $php_path/sapi/fpm/init.d.php-fpm /etc/init.d/php-fpm && \
-	chmod a+x /etc/init.d/php-fpm && \
-	chkconfig --add php-fpm && \
-	chkconfig php-fpm on && \
-	cp $php_path/etc/php-fpm.conf.default $php_path/etc/php-fpm.conf && \
-	cp $php_path/etc/php-fpm.d/www.conf.default $php_path/etc/php-fpm.d/www.conf && \
-	$php_path/sbin/php-fpm -c $(php-config --prefix)/lib/php.ini -y $php_path/etc/php-fpm.conf -t && \
-	$php_path/sbin/php-fpm -c $(php-config --prefix)/lib/php.ini -y $php_path/etc/php-fpm.conf
+  chmod a+x /etc/init.d/php-fpm && \
+  chkconfig --add php-fpm && \
+  chkconfig php-fpm on && \
+  cp $php_path/etc/php-fpm.conf.default $php_path/etc/php-fpm.conf && \
+  cp $php_path/etc/php-fpm.d/www.conf.default $php_path/etc/php-fpm.d/www.conf && \
+  $php_path/sbin/php-fpm -c $(php-config --prefix)/lib/php.ini -y $php_path/etc/php-fpm.conf -t && \
+  $php_path/sbin/php-fpm -c $(php-config --prefix)/lib/php.ini -y $php_path/etc/php-fpm.conf
 
   #write something into readme.txt
   echo -e "start php-fpm:\n$php_path/sbin/php-fpm -c $(php-config --prefix)/lib/php.ini -y $php_path/etc/php-fpm.conf\nstop php-fpm:\nkill -INT 'cat /usr/local/php/var/run/php-fpm.pid'\nOR\nservice php-fpm stop\nreboot php-fpm:\nkill -USR2 'cat /usr/local/php/var/run/php-fpm.pid'\nOR\nservice php-fpm reboot" >> readme.txt
 
-	#write phpinfo into /var/www/html
-	mkdir -p /var/www/html && \
+  #write phpinfo into /var/www/html
+  mkdir -p /var/www/html && \
   echo "<?php phpinfo();?>" > /var/www/html/i.php && \
   echo -e "<?php\n\$con = mysqli_connect(\"127.0.0.1\",\"root\",\"$mysqlpasswd\");\nif (!\$con){die('Could not connect: ' . mysql_error());}\necho 'Connected successfully';\nmysql_close($con);\n?>" >>/var/www/html/i.php
 
-	#config apache
-	if [ -f "/etc/httpd/conf/httpd.conf" ]; then
-		echo "AddHandler application/x-httpd-php .php" >> /etc/httpd/conf/httpd.conf
-		sed -i 's/DirectoryIndex index.html index.html.var/DirectoryIndex index.php index.html index.html.var/g' /etc/httpd/conf/httpd.conf
-		service httpd stop
-#		service httpd restart
-	fi
+  #config apache
+  if [ -f "/etc/httpd/conf/httpd.conf" ]; then
+    echo "AddHandler application/x-httpd-php .php" >> /etc/httpd/conf/httpd.conf
+    sed -i 's/DirectoryIndex index.html index.html.var/DirectoryIndex index.php index.html index.html.var/g' /etc/httpd/conf/httpd.conf
+    service httpd stop
+#   service httpd restart
+  fi
 
-	#config nginx
-	if [ -f "/etc/nginx/conf.d/default.conf" ]; then
+  #config nginx
+  if [ -f "/etc/nginx/conf.d/default.conf" ]; then
     mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.bak
     echo -e "server\n{\n listen 80;\n server_name localhost;\n root /var/www/html;\n access_log /var/log/nginx/access_com.log;\n error_log /var/log/nginx/error_com.log;\n index index.html index.php;\n location ~ \.php$ {\n  fastcgi_pass 127.0.0.1:9000;\n  fastcgi_index index.php;\n  fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;\n  include fastcgi_params; \n  }\n}" >> /etc/nginx/conf.d/vhost.conf
-		service nginx stop
-#		service nginx restart
-	fi
+#   service nginx stop
+    service nginx restart
+  fi
+}
+
+function uninstall_php()
+{
+  rm -rf php/
+  rm -rf /usr/local/bin/php*
+  rm -rf /usr/bin/php
+  /etc/init.d/php-fpm stop
+  kill `ps aux |grep php-fpm|cut -b 10-14`
+  rm -rf /etc/init.d/php-fpm
 }
 
 function enable_phar()
