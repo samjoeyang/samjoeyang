@@ -39,9 +39,9 @@ function install_php()
 
 	#download php
 	if [ ! -f "php-$php_version.tar.bz2" ]; then
-		wget -c http://hk1.php.net/distributions/php-$php_version.tar.bz2
+		wget -c http://cn2.php.net/distributions/php-$php_version.tar.bz2
 	fi
-	if [ $php_version == "7.1.7" ]; then
+	if [ $php_version == "7.1.17" ]; then
 		with_mysql="--enable-mysqlnd --with-mysqli=mysqlnd --with-mysql-sock=/tmp/mysql.sock --with-pdo-mysql=mysqlnd"
 		with_gd="--with-gd --with-webp-dir --with-jpeg-dir=/usr/local/lib --with-png-dir --with-xpm-dir --with-freetype-dir"
 	elif [ $php_version == "5.6.31" ]; then
