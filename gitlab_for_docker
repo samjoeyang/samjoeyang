@@ -1,0 +1,106 @@
+##Gitlab for Docker
+
+1.拉取镜像
+docker pull gitlab/gitlab-ce
+2.创建容器
+docker create --name gitlab -p55080:80 -p 55022:22 -p 55443:443 gitlab/gitlab-ce
+3.启动容器
+docker start gitlab
+4.进入容器
+docker exec -it gitlab /bin/bash
+查看版本
+cat /opt/gitlab/embedded/service/gitlab-rails/VERSION
+5.汉化
+5.1修改安装源
+cp /etc/apt/sources.list /etc/apt/sources.list.bak
+vi /etc/apt/sources.list
+添加以下内容
+deb http://mirrors.aliyun.com/ubuntu/ xenial main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ xenial-security main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ xenial-updates main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ xenial-backports main restricted universe multiverse
+##测试版源
+deb http://mirrors.aliyun.com/ubuntu/ xenial-proposed main restricted universe multiverse
+# 源码
+deb-src http://mirrors.aliyun.com/ubuntu/ xenial main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ xenial-security main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ xenial-updates main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ xenial-backports main restricted universe multiverse
+##测试版源
+deb-src http://mirrors.aliyun.com/ubuntu/ xenial-proposed main restricted universe multiverse
+# Canonical 合作伙伴和附加
+deb http://archive.canonical.com/ubuntu/ xenial partner
+deb http://extras.ubuntu.com/ubuntu/ xenial main
+
+5.2更新安装源
+apt-get update
+5.3安装patch
+apt-get install patch
+5.4.停止gitlab服务
+gitlab-ctl stop
+5.5运行汉化文件
+patch -d /opt/gitlab/embedded/service/gitlab-rails -p1 < 9.3.5-zh.diff
+5.6结束
+gitlab-ctl reconfigure
+
+6.配置邮箱:https://docs.gitlab.com.cn/omnibus/settings/smtp.html
+
+vi /etc/gitlab/gitlab.rb
+
+gitlab_rails['gitlab_email_enabled'] = true
+gitlab_rails['gitlab_email_from'] = '2935836530@qq.com'
+gitlab_rails['gitlab_email_display_name'] = 'GitLab UNO'
+gitlab_rails['gitlab_email_reply_to'] = 'noreply@zhenzhidaole.com'
+gitlab_rails['gitlab_email_subject_suffix'] = 'GitLab UNO - '
+
+gitlab_rails['smtp_enable'] = true
+ gitlab_rails['smtp_address'] = "smtp.qq.com"
+ gitlab_rails['smtp_port'] = 465
+ gitlab_rails['smtp_user_name'] = "norply@zhenzhidaole.com"
+ gitlab_rails['smtp_password'] = "sitauroxtkzrddbf"
+ gitlab_rails['smtp_domain'] = "qq.com"
+ gitlab_rails['smtp_authentication'] = "login"
+ gitlab_rails['smtp_enable_starttls_auto'] = true
+ gitlab_rails['smtp_tls'] = true
+
+gitlab-ctl reconfigure
+
+Testing the SMTP configuration 测试配置是否成功 
+配置完成后可以用Rails控制台验证邮件是否能发送成功。 在GitLab服务器上，执行 gitlab-rails console 进入控制台。 然后在控制台提示符后输入下面的命令 发送一封测试邮件：
+irb(main):003:0> Notify.test_email('destination_email@address.com', 'Message Subject', 'Message Body').deliver_now
+# 示例
+Notify.test_email('收件人邮箱', '邮件标题', '邮件正文').deliver_now
+
+7配置域名
+vi /etc/gitlab/gitlab.rb
+external_url 'http://gitlab.zhenzhidaole.com:55080'
+gitlab-ctl reconfigure
+
+8增加SSH密钥 http://gitlab.zhenzhidaole.com:55080/help/ssh/README
+查看是否存在密钥
+cat ~/.ssh/id_rsa.pub
+生成新密钥
+
+ssh-keygen -t rsa -C "your.email@example.com" -b 4096
+
+
+GitLab
+
+docker create --name gitlab -p55080:80 -p 55022:22 -p 55443:443 twang2218/gitlab-ce-zh
+
+
+
+故障处理
+execute[clear the gitlab-rails cache] action run 停止不动
+
+手工执行exec /opt/gitlab/embedded/bin/runsvdir-start
+再执行GitLab-ctl start
+安装恢复正常，GitLab也能正常提供服务
+gem sources -r https://rubygems.org/
+gem sources -a http://ruby.taobao.org/
+再执行
+gitlab-ctl reconfigure
+gitlab-ctl start
+
+
+docker run --detach --hostname gitlab.zhenzhidaole.com --privileged=true --publish 1443:443 --publish 8090:80 --publish 122:22  --name gitlab --restart always --volume /Users/samjoeyang/Gitlab/config:/etc/gitlab --volume /Users/samjoeyang/Gitlab/logs:/var/log/gitlab --volume /Users/samjoeyang/Gitlab/data:/var/opt/gitlab  gitlab/gitlab-ce:latest 
