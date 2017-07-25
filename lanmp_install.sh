@@ -44,7 +44,7 @@ function install_php()
 	if [ $php_version == "7.1.7" ]; then
 		with_mysql="--enable-mysqlnd --with-mysqli=mysqlnd --with-mysql-sock=/tmp/mysql.sock --with-pdo-mysql=mysqlnd"
 		with_gd="--with-gd --with-webp-dir --with-jpeg-dir=/usr/local/lib --with-png-dir --with-xpm-dir --with-freetype-dir"
-	elseif [ $php_version == "5.6.31" ]; then
+	elif [ $php_version == "5.6.31" ]; then
 		with_mysql="--enable-mysqlnd --with-mysql=mysqlnd --with-mysqli=mysqlnd --with-mysql-sock=/tmp/mysql.sock --with-pdo-mysql=mysqlnd"
 		with_gd="--with-gd --with-vpx-dir --with-jpeg-dir=/usr/local/lib --with-png-dir --with-xpm-dir --with-freetype-dir"
 	else
