@@ -180,7 +180,17 @@ function install_php()
   #write phpinfo into /var/www/html
   mkdir -p /var/www/html && \
   echo "<?php phpinfo();?>" > /var/www/html/i.php && \
-  echo -e "<?php\n\$con = mysqli_connect(\"127.0.0.1\",\"root\",\"$mysqlpasswd\");\nif (!\$con){die('Could not connect: ' . mysql_error());}\necho 'Connected successfully';\nmysql_close($con);\n?>" >>/var/www/html/i.php
+  cat > /var/www/html/i.php<<-EOF
+<?php
+$con = mysqli_connect("127.0.0.1","root","$mysqlpasswd");
+if (!$con){
+  die('Could not connect: ' . mysql_error());
+}
+echo 'Connected successfully';
+mysql_close($con);
+?>
+EOF
+#  echo -e "<?php\n\$con = mysqli_connect(\"127.0.0.1\",\"root\",\"$mysqlpasswd\");\nif (!\$con){die('Could not connect: ' . mysql_error());}\necho 'Connected successfully';\nmysql_close($con);\n?>" >>/var/www/html/i.php
 
   #config apache
   if [ -f "/etc/httpd/conf/httpd.conf" ]; then
@@ -193,7 +203,9 @@ function install_php()
   #config nginx
   if [ -f "/etc/nginx/conf.d/default.conf" ]; then
     mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.bak
-    echo -e "server\n{\n listen 80;\n server_name localhost;\n root /var/www/html;\n access_log /var/log/nginx/access_com.log;\n error_log /var/log/nginx/error_com.log;\n index index.html index.php;\n location ~ \.php$ {\n  fastcgi_pass 127.0.0.1:9000;\n  fastcgi_index index.php;\n  fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;\n  include fastcgi_params; \n  }\n}" >> /etc/nginx/conf.d/vhost.conf
+    wget -c https://raw.githubusercontent.com/samjoeyang/samjoeyang/master/nginx_vhost.conf
+    mv nginx_vhost.conf /etc/nginx/conf.d/vhost.conf
+#    echo -e "server\n{\n listen 80;\n server_name localhost;\n root /var/www/html;\n access_log /var/log/nginx/access_com.log;\n error_log /var/log/nginx/error_com.log;\n index index.html index.php;\n location ~ \.php$ {\n  fastcgi_pass 127.0.0.1:9000;\n  fastcgi_index index.php;\n  fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;\n  include fastcgi_params; \n  }\n}" >> /etc/nginx/conf.d/vhost.conf
 #   service nginx stop
     service nginx restart
   fi
