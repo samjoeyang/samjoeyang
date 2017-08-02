@@ -1,0 +1,291 @@
+搭建家庭用nas
+
+#本文主要记录搭建家庭使用的NAS服务器的方法
+
+#事由：
+1.百度云虽然提供完备的服务，但是现状随意删除用户文件以及下行速度限制，使用很是不爽
+2.国外同类服务Dropbox、Onedrive、amazondrive等提供的空间不够大，而且被墙
+3.国内其他同类服务基本比不上百度云
+4.国产产品，说关闭就关闭，你放心？
+
+#同类家庭用nas有没有？
+有很多。我比较了几个，推荐群晖，专业的nas服务器厂商，但是价格相比本文的搭建方法高处很多，多金的或者求简单不麻烦的可以考虑
+
+下面正式开始
+
+预期的功能：
+1.自动下载（aria2c）：支持http、magnet、BT
+2.远程同步（btsync）
+3.局域网文件共享（samba）
+4.流媒体播放（DLNA）：电视、手机、电脑播放其上面的媒体文件
+
+
+硬件准备
+1.树莓派3,Model B
+2.TF卡，最好是高速卡
+3.移动硬盘，大小自己选择
+4.电源和电源线
+
+软件准本
+
+开始步骤
+1.树莓派硬件组装
+基本上很简单，按照说明书操作就是了。笔者只购买了树莓派主板和外壳，其他配件看个人爱好自行选择
+2.树莓派系统安装
+官网下载：https://www.raspberrypi.org/downloads/，我选的是Raspbian官方系统
+在window下烧写TF卡镜像，使用工具win32diskimager，下载地址：https://sourceforge.net/projects/win32diskimager/
+以上准备好之后开始写入系统
+
+格式化移动硬盘
+格式化工具MiniTool Partition Wizard，版本随意
+下载地址http://www.partitionwizard.com/download.html
+具体使用方法是先将原分区删除，然后点击creat，在格式那里选ext4，类型我选的primary，label用的nas，然后点击apply就开始格式化硬盘了。
+（如果用容量较小的移动硬盘，可以直接用树莓派格式化，命令为：mkfs -t ext4 /dev/sdb1）
+挂载移动硬盘
+树莓派开机
+df -h 
+Filesystem              Size        Used        Avail     Use%      Mounted on 
+rootfs                    2.9G       2.4G        387M     87%       / 
+/dev/root               2.9G       2.4G        387M     87%       / 
+devtmpfs               183M        0           183M     0%         /dev 
+tmpfs                    38M        792K        37M      3%        /run 
+tmpfs                    5.0M         0          5.0M       0%        /run/lock 
+tmpfs                     75M         0          75M        0%        /run/shm 
+/dev/mmcblk0p1     56M        9.7M       47M      18%        /boot 
+/dev/sda1              70G         24M        67G      1%         /media/nas
+
+最后一行/dev/sda1说明硬盘已经挂载。为下一步安装samba，将共享文件夹设为/samba。于是新建文件夹:
+
+mkdir /samba
+
+设置访问权限：shmod 777 /samba
+
+将硬盘挂载到/samba文件夹，具体步骤：
+
+umount /dev/sda1   #取消挂载
+
+mount /dev/sda1 /samba
+
+这里再查看df -h，结果为：
+Filesystem              Size        Used        Avail     Use%      Mounted on 
+rootfs                    2.9G       2.4G        387M     87%       / 
+/dev/root               2.9G       2.4G        387M     87%       / 
+devtmpfs               183M        0           183M     0%         /dev 
+tmpfs                    38M        792K        37M      3%        /run 
+tmpfs                    5.0M         0          5.0M       0%        /run/lock 
+tmpfs                     75M         0          75M        0%        /run/shm 
+/dev/mmcblk0p1     56M        9.7M       47M      18%        /boot 
+/dev/sda1              70G         24M        67G      1%         /samba
+这里表示已挂载成功。
+解决硬盘的自动挂载
+
+每次树莓派重启或者硬盘插拔都需要对硬盘进行重新挂载，比较麻烦，因此需要自动挂载。这里要修改/etc/fstab文件。有人喜欢用vi进行编辑，我比较喜欢直接vnc连接上后，用编辑器进行编辑。
+proc            /proc           proc    defaults          0       0
+PARTUUID=59b7c210-01  /boot           vfat    defaults          0       2
+PARTUUID=59b7c210-02  /               ext4    defaults,noatime  0       1
+/dev/sda1       /samba          ext4    defaults        0       0
+# a swapfile is not a swap partition, no line here
+#   use  dphys-swapfile swap[on|off]  for that
+可以看到，fstab文件其实就是一个表格，表格各列的含意如下：
+
+第一列：磁盘分区名/卷标，一般是/dev/sdaN（N表示正整数）
+
+第二列：挂载点，我们在这里把/dev/sda1挂到/samba上。
+
+第三列：缺省设置，一般用defautls。
+
+第四列：是否备份：0——表示不做 dump 备份；1——表示要将整个 <fie sysytem> 里的内容备份；2 也表示要做 dump 备份，但该分区的重要性比 1 小。
+
+第五列：检测顺序：0——不进行检测；根分区（/），必须填写 1，其它的都不能填写 1。如果有分区填写大于 1 的话，则在检查完根分区后，从小到大依次检查下去。
+
+具体填写方法在图中已注明。
+
+启动系统
+
+3.前期配置和准备
+连接wifi，建议使用静态IP,本文设置成192.168.1.99
+sudo vi /etc/network/interfaces
+如果你要设置的是有线网卡的 IP 地址，那么把 eth0 的 dhcp 改成 static 然后在下一行追加 IP 信息，结果大概如下：
+iface eth0 inet static
+address 192.168.1.98 # 设定的静态IP地址
+netmask 255.255.255.0 # 网络掩码
+gateway 192.168.1.1    # 网关
+如果你要设置的是无线网卡的，那么除了把 wlan0 的 dhcp 改成 static 之外，还需要填写无线网的名称和密码，编辑后的结果大概如下：
+iface wlan0 inet static
+    wpa-ssid Your_Wifi_SSID
+    wpa-psk Your_Wifi_Password
+address 192.168.1.99 # 设定的静态IP地址
+netmask 255.255.255.0 # 网络掩码
+gateway 192.168.1.1   # 网关
+network 192.168.1.1   # 网络地址
+#wpa-roam /etc/wpa_supplicant/wpa_supplicant.conf
+▲ 注意注释掉最后一行
+
+搞定之后，咱们用 poweroff 命令关掉树莓派，等到机器上的绿灯不闪了，把电源拔掉，再把网线拔掉，重新连接电源，稍等一会，看看是不是就通过无线网络的 IP 地址可以访问了。
+
+开始系统前的设置
+sudo raspi-config
+然后依次设置
+1.修改pi用户密码
+2.选择expand_rootfs
+3.打开ssh和vnc
+4.修改地区，时区以及字符集
+5.配置键盘
+完成以上配置，保存退出
+
+上面的折腾完了，就可以使用ssh或者vnc远程访问
+
+接下来为了后面的安装速度更快，需要修改一下安装源
+sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
+sudo vi /etc/apt/sources.list
+把下面的复制进去
+deb http://mirrors.tuna.tsinghua.edu.cn/raspbian/raspbian/ jessie main non-free contrib
+deb-src http://mirrors.tuna.tsinghua.edu.cn/raspbian/raspbian/ jessie main non-free 
+
+deb http://mirrors.ustc.edu.cn/raspbian/raspbian/ jessie main contrib non-free rpi
+deb-src http://mirrors.ustc.edu.cn/raspbian/raspbian/ jessie main contrib non-free rpi
+
+deb http://mirrors.aliyun.com/raspbian/raspbian/ jessie main non-free contrib
+deb-src http://mirrors.aliyun.com/raspbian/raspbian/ jessie main non-free contrib
+
+保存后退出，然后执行一次更新
+sudo apt-get update && sudo apt-get upgrade -y
+
+安装中文字体（我自己安装过程中，没有安装字体，各位根据需要自己选择）
+使用sudo apt-get install ttf-wqy-zenhei xfonts-intl-chinese wqy*  安装即可
+
+安装samba
+sudo apt-get install samba samba-common-bin
+
+安装完成后，配置/etc/samba/smb.conf文件
+
+在其最后添加以下命令：
+[share]                               #共享文件的名称，将在网络上以此名称显示
+    path = /samba                     #共享文件的路径 
+    valid users = root pi             #允许访问的用户，这里我用的是root 和 pi 两个用户
+    browseable = yes                  #允许浏览
+    public = yes                      #共享开放
+    writable = yes                    #可写
+保存后，重启samba服务，输入
+
+sudo /etc/init.d/samba restart
+
+最后添加共享用户：
+sudo smbpasswd –a pi  #这里我用的pi
+设置开机自启动
+sudo vi /etc/rc.local
+在exit 0上一行添加如下
+sudo /etc/init.d/samba restart
+然后可以通过其他电脑使用“映射网络驱动器”测试samba的安装效果了
+最后在计算机下会出现共享的文件夹，点开文件夹，新建test.txt文件进行一下测试，如果能正常建立，就说明ok了，如果不行，应该是权限问题，可再重新设置一下/samba文件夹权限。这里注意，如果在/samba文件夹下新建新的文件夹，也需要设置权限，可以用vnc连接后，用管理员浏览，点右键设置文件夹权限为read and write，也可以用chmod命令设置。
+
+安装DLNA实现流媒体服务器
+sudo apt-get install minidlna
+设置/etc/minidlna.conf文件，在文件尾部添加如下内容：
+media_dir=A,/samba/DLNA/Music                #A表示这个目录是存放音乐的，当minidlna读到配置文件时，它会自动加载这个目录下的音乐文件 
+media_dir=P,/samba/DLNA/Picture                                                
+media_dir=V,/samba/DLNA/Video                                                  
+db_dir=/samba/DLNA/db                       #配置minidlna的数库数据的存放目录 
+log_dir=/samba/DLNA/log                     #配置日志目录
+
+在/samba文件夹下，建立以上文件夹，并设置好权限为read and write。
+重启服务
+sudo /etc/init.d/minidlna restart
+
+在电脑上进行播放
+先在树莓派以上对应的video等文件夹内存上一些文件（可利用samba直接从电脑上考入），然后返回到计算机进行操作。点击我的电脑下面的网络，出现媒体设备
+
+手机上进行播放
+手机上实现网络共享，可安装es file explorer软件，在其网络处进行设置，设置方法与电脑基本一样，这里不再详述。设置后，文件均可浏览，媒体文件双击可以在线播放。也可以直接使用updp播放器，这里我安装的是moliplayer，可以在其附近设备里，直接找到raspberrypi:root，访问其媒体问题，注意，这里是访问的DLNA共享，所以不需要再输入密码。
+
+智能电视进行播放
+智能电视一般都是用的android系统，与手机基本一样。
+
+安装aria2
+sudo apt-get install aria2
+创建配置文件
+在/etc目录下创建aria2目录用来存放配置文件：
+
+sudo mkdir /etc/aria2
+
+创建空白的aria2.session文件：
+
+sudo touch /etc/aria2/aria2.session
+
+创建配置文件
+
+sudo nano /etc/aria2/aria2.conf
+
+在该文件中输入以下内容：
+
+#＝＝＝＝＝＝＝＝＝文件保存目录自行修改 
+dir=/samba 
+disable-ipv6=true 
+#打开rpc的目的是为了给web管理端用 
+enable-rpc=true 
+rpc-allow-origin-all=true 
+rpc-listen-all=true 
+#rpc-listen-port=6800 
+continue=true 
+input-file=/etc/aria2/aria2.session 
+save-session=/etc/aria2/aria2.session 
+max-concurrent-downloads=3
+
+这里为了方便共享，我直接设置将文件下载到samba共享文件夹。
+
+3、启动aria2
+
+sudo aria2c --conf-path=/etc/aria2/aria2.conf
+
+如果没有提示任何错误信息，那就按ctrl+c停止上面的语句，转为后台运行：
+
+sudo aria2c --conf-path=/etc/aria2/aria2.conf -D
+
+同时其此句写到开机启动中，编辑/etc/rc.local，如上
+
+
+安装apache
+为了能web管理aria2进行下载，需要安装yaaw和apache环境。
+安装apache
+sudo apt-get install apache2
+修改/var/www的权限
+chmod 777 /var/www
+
+
+安装nginx
+sudo apt-get install nginx
+修改配置
+sudo cp /etc/nginx/sites-enabled/default /etc/nginx/sites-enabled/default.bak
+sudo vi /etc/nginx/sites-enabled/default
+修改路径
+修改权限
+sudo chmod 777 -R /var/www
+
+安装yaaw
+从https://github.com/binux/yaaw下载yaaw，点击右下角的Download Zip，下载后将解压后的文件夹内内容拷贝到/var/www文件夹下。这时输入树莓派IP，如果出现以下页面，则表示已经正常工作了。
+或者
+wget -c https://codeload.github.com/binux/yaaw/zip/master
+sudo mv master master.zip
+unzip master.zip
+然后通过浏览器访问http://192.168.1.99，成功访问到即安装成功
+
+以前可以设置迅雷离线下载，现在迅雷已经关闭了这个途径
+
+安装btsync
+下载地址https://www.resilio.com/individuals/?utm_source=navbar&utm_medium=synchome
+选择armhf版的下载
+wget -c https://download-cdn.resilio.com/stable/linux-armhf/resilio-sync_armhf.tar.gz
+tar zxvf resilio-sync_armhf.tar.gz
+./rslsync --webui.listen 0.0.0.0:8888
+或者
+./rslsync --dump-sample-config
+./rslsync --config rslsync.config.json
+
+然后通过浏览器访问http://192.168.1.99:8888
+
+
+
+
+
+
+
