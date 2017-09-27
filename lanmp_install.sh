@@ -9,7 +9,7 @@ function init()
 #	cp -rf ./repo/aliyun.repo /etc/yum.repos.d/
 #	cp -rf ./repo/epel.repo /etc/yum.repos.d/
 	rpm --import /etc/pki/rpm-gpg/RPM* && rpm --import http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-6
-	yum -y install epel-release gcc gcc-c++ bison autoconf automake initscripts wget git svn
+	yum -y install epel-release gcc gcc-c++ bison autoconf automake initscripts wget git svn unzip
 	echo "Initialization complete" >> readme.txt
 	echo "Initialization complete"
 }
@@ -18,6 +18,47 @@ function install_httpd()
 {
 	yum -y install httpd httpd-devel
 	sed -i 's/#ServerName www.example.com:80/ServerName localhost:80/g' /etc/httpd/conf/httpd.conf
+}
+
+function install_httpd_compile()
+{
+	yum install -y expat-devel 
+
+	#download packages
+	if [ ! -f "httpd-2.4.27.tar.gz" ]; then
+		wget -c http://mirrors.shuosc.org/apache//httpd/httpd-2.4.27.tar.gz
+	fi
+	if [ ! -f "apr-1.6.2.tar.gz" ]; then
+		wget -c http://mirror.bit.edu.cn/apache//apr/apr-1.6.2.tar.gz
+	fi
+	if [ ! -f "apr-util-1.6.0.tar.gz" ]; then
+		wget -c http://mirror.bit.edu.cn/apache//apr/apr-util-1.6.0.tar.gz
+	fi
+	if [ ! -f "pcre-8.41.zip" ]; then
+		wget -c https://ftp.pcre.org/pub/pcre/pcre-8.41.zip
+	fi
+
+	tar zxvf apr-1.6.2.tar.gz && cd apr-1.6.2 && ./configure --prefix=/usr/local/apr && make && make install && cd ..
+
+	tar zxvf apr-util-1.6.0.tar.gz && cd apr-util-1.6.0 && ./configure --prefix=/usr/local/apr-util --with-apr=/usr/local/apr && make && make install && cd ..
+
+	unzip pcre-8.41.zip && cd pcre-8.41 && ./configure && make && make install && cd ..
+
+	tar zxvf httpd-2.4.27.tar.gz && cd httpd-2.4.27 && ./configure --prefix=/usr/local/httpd --sysconfdir=/etc/httpd/conf --enable-so --enable-rewirte --enable-ssl --enable-cgi --enable-cgid --enable-modules=all --enable-modules-shared=most --enable-mpms-shared=all --with-apr=/usr/local/apr --with-apr-util=/usr/local/apr-util --with-pcre --with-libxml2 --with-mpm=prefork && make && make install && cd ..
+
+	/usr/local/httpd/bin/apachectl start 
+
+	ss -tnl 
+	echo "export PATH=/usr/local/httpd/bin:$PATH">>/etc/profile.d/httpd.sh && source /etc/profile.d/httpd.sh
+
+	ln -s /usr/local/httpd/include /usr/include/httpd
+
+	echo "MANPATH /usr/local/httpd/man" > /etc/man.config
+
+	wget -c https://raw.githubusercontent.com/samjoeyang/samjoeyang/master/httpd_boot_sh_6 && mv httpd_boot_sh_6 /etc/rc.d/init.d/httpd && chown root:root httpd && chmod 755 httpd
+
+	chkconfig --add httpd && chkconfig --level 345 httpd on
+
 }
 
 function install_nginx()
