@@ -22,7 +22,8 @@ function install_httpd()
 
 function install_httpd_compile()
 {
-	yum install -y expat-devel 
+	#default install path is '/usr/local/',and boot script also.
+	yum install -y expat-devel openssl openssl-devel
 
 	#download packages
 	if [ ! -f "httpd-2.4.27.tar.gz" ]; then
@@ -45,18 +46,19 @@ function install_httpd_compile()
 	unzip pcre-8.41.zip && cd pcre-8.41 && ./configure && make && make install && cd ..
 
 	tar zxvf httpd-2.4.27.tar.gz && cd httpd-2.4.27 && ./configure --prefix=/usr/local/httpd --sysconfdir=/etc/httpd/conf --enable-so --enable-rewirte --enable-ssl --enable-cgi --enable-cgid --enable-modules=all --enable-modules-shared=most --enable-mpms-shared=all --with-apr=/usr/local/apr --with-apr-util=/usr/local/apr-util --with-pcre --with-libxml2 --with-mpm=prefork && make && make install && cd ..
-
+	#self boot script
 	/usr/local/httpd/bin/apachectl start 
-
+	#check listen port
 	ss -tnl 
+	#add env_value
 	echo "export PATH=/usr/local/httpd/bin:$PATH">>/etc/profile.d/httpd.sh && source /etc/profile.d/httpd.sh
-
+	#import libs
 	ln -s /usr/local/httpd/include /usr/include/httpd
-
+	#import man file
 	echo "MANPATH /usr/local/httpd/man" > /etc/man.config
-
-	wget -c https://raw.githubusercontent.com/samjoeyang/samjoeyang/master/httpd_boot_sh_6 && mv httpd_boot_sh_6 /etc/rc.d/init.d/httpd && chown root:root httpd && chmod 755 httpd
-
+	#get boot script
+	wget -c https://raw.githubusercontent.com/samjoeyang/samjoeyang/master/httpd_boot_sh_6 && mv httpd_boot_sh_6 /etc/rc.d/init.d/httpd && cd /etc/rc.d/init.d/ && chown root:root httpd && chmod 755 httpd
+	#start on boot
 	chkconfig --add httpd && chkconfig --level 345 httpd on
 
 }
@@ -144,40 +146,40 @@ function install_php()
   --enable-bcmath \
   --with-iconv \
   --enable-calendar \
-	--with-cdb \
-	--enable-dom \
-	--enable-exif \
-	--enable-fileinfo \
-	--enable-filter \
-	--with-pcre-dir \
-	--enable-ftp \
-	--with-zlib-dir  \
-	--enable-gd-native-ttf \
-	--enable-gd-jis-conv \
-	--with-gettext \
-	--enable-json \
-	--enable-mbstring \
-	--enable-mbregex \
-	--enable-mbregex-backtrack \
-	--with-libmbfl \
-	--with-onig \
-	--enable-pdo \
-	--with-zlib-dir \
-	--with-pdo-sqlite \
-	--with-readline \
-	--enable-session \
-	--enable-shmop \
-	--enable-simplexml \
-	--enable-sockets  \
-	--enable-sysvmsg \
-	--enable-sysvsem \
-	--enable-sysvshm \
-	--enable-wddx \
-	--with-xsl \
-	--enable-zip \
-	--enable-mysqlnd-compression-support \
-	--with-pear \
-	--enable-opcache >> ../install_php_log 
+  --with-cdb \
+  --enable-dom \
+  --enable-exif \
+  --enable-fileinfo \
+  --enable-filter \
+  --with-pcre-dir \
+  --enable-ftp \
+  --with-zlib-dir  \
+  --enable-gd-native-ttf \
+  --enable-gd-jis-conv \
+  --with-gettext \
+  --enable-json \
+  --enable-mbstring \
+  --enable-mbregex \
+  --enable-mbregex-backtrack \
+  --with-libmbfl \
+  --with-onig \
+  --enable-pdo \
+  --with-zlib-dir \
+  --with-pdo-sqlite \
+  --with-readline \
+  --enable-session \
+  --enable-shmop \
+  --enable-simplexml \
+  --enable-sockets  \
+  --enable-sysvmsg \
+  --enable-sysvsem \
+  --enable-sysvshm \
+  --enable-wddx \
+  --with-xsl \
+  --enable-zip \
+  --enable-mysqlnd-compression-support \
+  --with-pear \
+  --enable-opcache >> ../install_php_log 
   make >> ../install_php_log 
   make install >> ../install_php_log 
   cd ../
