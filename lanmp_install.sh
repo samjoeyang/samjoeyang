@@ -57,7 +57,14 @@ function install_httpd_compile()
 	#import man file
 	echo "MANPATH /usr/local/httpd/man" > /etc/man.config
 	#get boot script
-	wget -c https://raw.githubusercontent.com/samjoeyang/samjoeyang/master/httpd_boot_sh_6 && mv httpd_boot_sh_6 /etc/rc.d/init.d/httpd && cd /etc/rc.d/init.d/ && chown root:root httpd && chmod 755 httpd
+	#wget -c https://raw.githubusercontent.com/samjoeyang/samjoeyang/master/httpd_boot_sh_6 && mv httpd_boot_sh_6 /etc/rc.d/init.d/httpd && cd /etc/rc.d/init.d/ && chown root:root httpd && chmod 755 httpd
+	cp httpd-2.4.27/build/rpm/httpd.init /etc/init.d/httpd
+	chown root:root /etc/init.d/httpd && chmod 755 /etc/init.d/httpd
+	sed -i 's/httpd=\${HTTPD-\/usr\/sbin\/httpd}/httpd=\${HTTPD-\/usr\/local\/httpd\/bin\/httpd}/g' /etc/init.d/httpd
+	sed -i 's/pidfile=\${PIDFILE-\/var\/run\/\${prog}.pid}/pidfile=\${PIDFILE-\/usr\/local\/httpd\/logs\/\${prog}.pid}/g' /etc/init.d/httpd
+	sed -i "s/CONFFILE=\/etc\/httpd\/conf\/httpd.conf/CONFFILE=\/etc\/httpd\/conf\/httpd.conf/g" /etc/init.d/httpd
+	
+	sed -i 's/#ServerName www.example.com:80/ServerName localhost:80/g' /etc/httpd/conf/httpd.conf
 	#start on boot
 	chkconfig --add httpd && chkconfig --level 345 httpd on
 
