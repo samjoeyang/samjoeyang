@@ -26,7 +26,11 @@
 3.移动硬盘，大小自己选择
 4.电源和电源线
 
-软件准本
+默认用户pi默认密码是raspberry，首次运行后，用passwd命令修改密码，默认root用户是关闭的，通过sudo passwd root给root用户修改密码，打开root用户
+然后运行 sudo raspi-config 打开设置界面，开启ssh。
+
+
+软件准备
 
 开始步骤
 1.树莓派硬件组装
