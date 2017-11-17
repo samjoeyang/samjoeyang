@@ -1,0 +1,45 @@
+docker pull wnameless/oracle-xe-11g:16.04
+docker create --name oraclexe11g01 -p 49160:22 -p 49161:1521 wnameless/oracle-xe-11g:16.04
+/*
+docker create --name oraclexe11g01 -p 49160:22 -p 49161:1521 -e ORACLE_ALLOW_REMOTE=true wnameless/oracle-xe-11g:16.04
+*/
+docker start oraclexe11g01
+docker stop oraclexe11g01
+
+ssh root@localhost -p 49160
+password: admin
+
+oracle连接参数
+hostname: localhost/121.42.210.126
+port: 49161
+sid: xe
+username: system
+password: oracle
+Password for SYS & SYSTEM
+oracle
+
+lsnrctl  status
+
+lsnrctl start
+
+trace.log
+-----------------------------------------------------------
+导入和导出镜像
+docker images
+获得到镜像的id
+导出镜像
+docker save 1c74dece5bbf >1c74dece5bbf.tar
+导入镜像
+docker load < 1c74dece5bbf.tar
+然后给镜像打上tag
+docker tag 1c74dece5bbf oracle-xe-11g:16.04
+
+导入和导出容器
+docker ps
+获得容器的id
+导出容器
+docker export 1c74dece5bbf > 1c74dece5bbf.tar
+导入容器
+docker import 1c74dece5bbf.tar
+然后给镜像打上tag
+docker tag 1c74dece5bbf oracle-xe-11g:16.04
