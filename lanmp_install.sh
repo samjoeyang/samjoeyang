@@ -85,13 +85,13 @@ function install_php()
   cp -frp /usr/lib64/libldap* /usr/lib/
 
 #  php_version="5.6.31"
-  php_version="7.1.7"
+  php_version="7.2.2"
 
   #download php
   if [ ! -f "php-$php_version.tar.bz2" ]; then
     wget -c http://cn2.php.net/distributions/php-$php_version.tar.bz2
   fi
-  if [ $php_version == "7.1.7" ]; then
+  if [ $php_version == "7.2.2" ]; then
     with_mysql="--enable-mysqlnd --with-mysqli=mysqlnd --with-mysql-sock=/tmp/mysql.sock --with-pdo-mysql=mysqlnd"
     with_gd="--with-gd --with-jpeg-dir=/usr/local/lib --with-png-dir --with-freetype-dir" #--with-webp-dir --with-xpm-dir 
   elif [ $php_version == "5.6.31" ]; then
@@ -103,7 +103,8 @@ function install_php()
   fi
 
   #install php
-  php_path=`pwd`/php
+  #php_path=`pwd`/php
+  php_path=/usr/local/php
   tar -jxvf php-$php_version.tar.bz2 && mv php-$php_version $php_path/ && cd $php_path
   #--with-apxs2=/usr/sbin/apxs --with-config-file-path=/etc --with-fpm-user=nginx --with-fpm-group=nginx--with-gmp \
   ./configure --prefix=`pwd` \
@@ -161,7 +162,6 @@ function install_php()
   --with-pcre-dir \
   --enable-ftp \
   --with-zlib-dir  \
-  --enable-gd-native-ttf \
   --enable-gd-jis-conv \
   --with-gettext \
   --enable-json \
