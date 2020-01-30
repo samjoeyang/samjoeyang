@@ -1,0 +1,7 @@
+apt-get update -y && apt-get install openssh-server -y && sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config && passwd root && /etc/init.d/ssh restart
+echo "export LANG=\"en_US.UTF-8\"" >> ~/.bashrc
+echo "export LC_ALL=C" >>  ~/.bashrc
+echo "export LANGUAGE = \"en_US:en\"" >> ~/.bashrc
+echo "export LC_CTYPE = \"zh_CN.UTF-8\"" >> ~/.bashrc
+source ~/.bashrc
+apt-get install -y gcc wget git net-tools vim sudo
