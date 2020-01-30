@@ -1,0 +1,19 @@
+原始地址见-->https://github.com/orobardet/dsm-reverse-proxy-websocket
+
+#先备份,安全第一
+cp /usr/syno/share/nginx/Portal.mustache /usr/syno/share/nginx/Portal.mustache.bak
+
+#再编辑
+nano /usr/syno/share/nginx/Portal.mustache
+在打开的文件中，找到location 节点，在节点的末尾添加下面的代码
+
+proxy_set_header Upgrade $http_upgrade;
+proxy_set_header Connection "upgrade";
+proxy_read_timeout 86400;
+保存后，充气nginx
+
+sudo synoservicecfg --restart nginx
+注意，DSM升级的时候，可能会重新覆盖这个文件。如果覆盖了，重新改一下就好。
+
+confluence提示“The editor didn't load this time” 编辑器无法加载的错误
+如果在群晖上假设confluence，同时开启了反向代理域名来访问，编辑时出现上诉错误时，就可以用上面的方法来回复websocket。
